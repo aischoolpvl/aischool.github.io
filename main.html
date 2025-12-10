@@ -1,0 +1,361 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI School – вселенные</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/animejs/3.2.1/anime.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@3/dist/email.min.js"></script>
+    <style>
+        body{margin:0;background:#000;font-family:'Exo 2',sans-serif;overflow-x:hidden;color:#fff}
+        /* ---------- фон + звёзды ---------- */
+        .cosmic-bg{position:fixed;inset:0;z-index:-2;background:radial-gradient(ellipse at center,#0a0a2a 0%,#000 70%)}
+        .stars{position:fixed;inset:0;z-index:-1;
+            background:radial-gradient(2px 2px at 20px 30px,#eee,transparent),
+                       radial-gradient(2px 2px at 40px 70px,rgba(255,255,255,.8),transparent);
+            background-size:200px 100px;animation:sparkle 20s linear infinite}
+        @keyframes sparkle{0%,100%{opacity:1}50%{opacity:.3}}
+
+        /* ---------- метеоры ---------- */
+        .meteor{position:absolute;width:2px;height:2px;background:#fff;border-radius:50%;animation:meteor-fall linear infinite}
+        @keyframes meteor-fall{0%{transform:translateY(-100px) translateX(0);opacity:1}100%{transform:translateY(calc(100vh + 100px)) translateX(100px);opacity:0}}
+
+        /* ---------- эмоджи-метеориты ---------- */
+        .space-emoji{
+            position: fixed;
+            font-size: 22px;
+            opacity: .3;
+            pointer-events: none;
+            z-index: 2000;
+            top: var(--y);      /* 🌟 ВОТ ЭТО ВАЖНО! */
+            animation: emojiFly linear forwards;
+        }
+
+        @keyframes emojiFly{
+            0%{ transform: translateX(-120px) translateY(var(--y)); }
+            100%{ transform: translateX(calc(100vw + 200px)) translateY(var(--y)); }
+        }
+
+        /* ---------- луна ---------- */
+        .moon{position:fixed;bottom:-150px;right:-50px;width:280px;z-index:100;
+            opacity:.7;filter:brightness(.7) drop-shadow(0 0 10px rgba(255,255,255,.2));
+            transition:opacity .4s,filter .4s,transform .4s}
+        .moon:hover{opacity:1;filter:brightness(1.1) drop-shadow(0 0 25px rgba(255,255,255,.5));transform:scale(1.05);cursor:pointer}
+
+        /* ---------- астронавт ---------- */
+        .astronaut{position:fixed;bottom:70px;left:90%;transform:translateX(-50%);
+            width:80px;height:60px;background:url(astronaut-sleep.png) center/contain no-repeat;
+            cursor:pointer;z-index:101;transition:filter .3s,transform .3s}
+        .astronaut.sleeping{animation:astronaut-sleep 4s ease-in-out infinite}
+        .astronaut.flying{animation:none;background-image:url(astronaut-fly.png);pointer-events:none}
+        @keyframes astronaut-sleep{0%,100%{transform:translateX(-50%) rotate(-5deg)}50%{transform:translateX(-50%) rotate(5deg)}}
+
+        /* ---------- прогресс ---------- */
+        .progress-bar{position:fixed;top:0;left:0;width:100%;height:4px;background:rgba(255,255,255,.1);z-index:200}
+        .progress-fill{height:100%;background:linear-gradient(to right,#0ff,#8a2be2);width:0;transition:.5s}
+
+        /* ---------- viewer ---------- */
+        .universe-viewer{width:100%;height:70vh;margin-top:80px;padding:0 20px;box-sizing:border-box;position:relative}
+        .universe-scene{position:absolute;inset:0;opacity:0;transition:opacity 1s}
+        .universe-scene.active{opacity:1}
+        .video-container{
+            position: fixed;
+            inset: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 2;
+        }
+
+        .video-container video{width:260px;max-width:90vw;border-radius:12px;transition:.4s;cursor:pointer}
+        .video-container video.playing{width:700px;transform:scale(1.05)}
+        .universe-info{
+            position:absolute;
+            top:20px;
+            left:20px;
+            max-width:300px;
+            background:rgba(0,0,0,.8);
+            backdrop-filter:blur(10px);
+            border:1px solid rgba(0,255,255,.3);
+            border-radius:15px;
+            padding:20px;
+            color:#fff;
+            z-index:10;
+            opacity:1;
+            transition:opacity .4s;
+        }
+
+        .universe-info.fade-out{
+            opacity:0;
+        }
+
+
+        /* ---------- ai панель ---------- */
+        .ai-interface{position:fixed;bottom:30px;left:50%;transform:translateX(-50%);display:flex;align-items:center;gap:20px;background:rgba(0,0,0,.8);backdrop-filter:blur(10px);padding:20px;border-radius:20px;border:1px solid rgba(0,255,255,.3);z-index:150;transition:.3s}
+        .ai-interface.minimized{transform:translateX(-50%) scale(.3);bottom:10px}
+        .ai-sphere{width:60px;height:60px;border-radius:50%;background:radial-gradient(circle at 30% 30%,rgba(0,255,255,.8),rgba(138,43,226,.4));box-shadow:0 0 30px rgba(0,255,255,.8),inset -10px -10px 20px rgba(0,100,200,.3);cursor:pointer;animation:float 4s ease-in-out infinite}
+        @keyframes float{0%,100%{transform:translateY(0)}50%{transform:translateY(-8px)}}
+        .universe-selector{display:flex;gap:15px}
+        .universe-btn{width:50px;height:50px;border-radius:50%;border:2px solid rgba(255,255,255,.3);background:rgba(255,255,255,.1);backdrop-filter:blur(5px);cursor:pointer;font-size:20px;transition:.3s}
+        .universe-btn:hover{transform:scale(1.1);border-color:rgba(0,255,255,.8);box-shadow:0 0 20px rgba(0,255,255,.5)}
+        .universe-btn.active{border-color:#0ff;background:rgba(0,255,255,.2);box-shadow:0 0 30px rgba(0,255,255,.8)}
+        .universe-btn.visited::after{content:'✓';position:absolute;top:-5px;right:-5px;width:20px;height:20px;background:#32cd32;border-radius:50%;font-size:12px;display:flex;align-items:center;justify-content:center;color:#fff}
+
+        /* ---------- кнопка задания ---------- */
+        .task-button{position:fixed;top:50%;right:30px;transform:translateY(-50%);background:linear-gradient(to right,#ff6b6b,#ee5a24);color:#fff;border:none;padding:15px 25px;border-radius:25px;font-size:16px;font-weight:bold;cursor:pointer;box-shadow:0 5px 20px rgba(255,107,107,.4);animation:pulse 2s infinite;z-index:300}
+        @keyframes pulse{0%,100%{box-shadow:0 5px 20px rgba(255,107,107,.4)}50%{box-shadow:0 5px 30px rgba(255,107,107,.8)}}
+
+        /* ---------- модалка ---------- */
+        .task-modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.8);backdrop-filter:blur(10px);z-index:2000;display:none;align-items:center;justify-content:center}
+        .task-modal-overlay.active{display:flex}
+        .task-modal{background:rgba(0,0,0,.95);border:1px solid rgba(0,255,255,.4);border-radius:25px;padding:40px;max-width:600px;width:90%;max-height:90vh;overflow-y:auto;position:relative;box-shadow:0 20px 60px rgba(0,255,255,.3)}
+        .close-modal{position:absolute;top:20px;right:20px;background:none;border:none;color:#ff6b6b;font-size:30px;cursor:pointer;transition:.3s}
+        .close-modal:hover{color:#ff4444;transform:scale(1.2)}
+        .email-form-group{margin-bottom:20px}
+        .email-form-group label{display:block;margin-bottom:8px;color:#ff6b6b;font-weight:600}
+        .email-form-group input,.email-form-group textarea{width:100%;padding:12px;background:rgba(255,255,255,.1);border:1px solid rgba(255,107,107,.4);border-radius:8px;color:#fff;font-size:14px;transition:.3s}
+        .email-form-group input:focus,.email-form-group textarea:focus{outline:none;border-color:#ff6b6b;box-shadow:0 0 15px rgba(255,107,107,.4)}
+        .modal-send-btn{background:linear-gradient(to right,#ff6b6b,#ee5a24);color:#fff;border:none;padding:15px 30px;border-radius:20px;font-size:16px;font-weight:bold;cursor:pointer;transition:.3s;width:100%;margin-top:20px}
+        .modal-send-btn:hover{transform:translateY(-2px);box-shadow:0 10px 25px rgba(255,107,107,.4)}
+        .modal-status{margin-top:15px;padding:10px;border-radius:8px;display:none}
+        .modal-status.success{background:rgba(50,205,50,.2);border:1px solid #32cd32;color:#32cd32}
+        .modal-status.error{background:rgba(255,68,68,.2);border:1px solid #ff4444;color:#ff4444}
+    </style>
+</head>
+<body>
+    <div class="cosmic-bg"></div>
+    <div class="stars"></div>
+    <img src="moon.png" class="moon" id="moon">
+    <div class="astronaut sleeping" id="astronaut"></div>
+
+    <div class="progress-bar"><div class="progress-fill" id="progressFill"></div></div>
+
+    <div class="universe-viewer" id="universeViewer"></div>
+
+    <div class="ai-interface" id="aiInterface">
+        <div class="ai-sphere" id="aiSphere" title="Вернуться на старт"></div>
+        <div class="universe-selector" id="universeSelector"></div>
+    </div>
+
+    <button class="task-button" id="taskButton" title="Отправить задание">📧 Отправить задание</button>
+
+    <div class="task-modal-overlay" id="taskModalOverlay">
+        <div class="task-modal">
+            <button class="close-modal" id="closeModal">×</button>
+            <div class="task-modal-header">
+                <h2>🚀 Космическое Задание</h2>
+                <p>Отправьте ваше исследование на почту aischool.pvl@gmail.com</p>
+            </div>
+            <form id="modalEmailForm">
+                <div class="email-form-group"><label>Ваше имя:</label><input type="text" name="fromName" required placeholder="Космический исследователь"></div>
+                <div class="email-form-group"><label>Ваш email:</label><input type="email" name="fromEmail" required placeholder="your.email@example.com"></div>
+                <div class="email-form-group"><label>Сообщение:</label><textarea name="message" rows="4" placeholder="Расскажите о вашем путешествии по вселенным..."></textarea></div>
+                <div class="modal-file-area" id="modalFileArea"><div class="text-5xl mb-3">📁</div><div class="text-lg mb-2 font-semibold">Перетащите файлы сюда или кликните</div><div class="text-sm text-gray-300">Макс. размер файла: 10 МБ</div></div>
+                <input type="file" id="modalFileInput" multiple style="display:none">
+                <div class="modal-file-list" id="modalFileList"></div>
+                <button type="submit" class="modal-send-btn">Отправить на aischool.pvl@gmail.com</button>
+                <div class="modal-status" id="modalStatus"></div>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        /* ---------- EmailJS ---------- */
+        emailjs.init('9cFPI4b9E1FQqAjep');
+        const emailjsConfig={serviceID:'service_1wh79p2',templateID:'template_pnra3v4',publicKey:'9cFPI4b9E1FQqAjep'};
+
+        /* ---------- фоновые анимации ---------- */
+        /* ---------- эмоджи-метеориты ---------- */
+        const emojiPool=['🪐','🌍','🌙','☄️','🌟','✨','🌓','🛰️','🛸'];
+
+        function createSpaceEmoji(){
+            const el=document.createElement('div');
+            el.className='space-emoji';
+
+            el.textContent = emojiPool[Math.floor(Math.random() * emojiPool.length)];
+
+            const y = Math.random() * window.innerHeight;
+            el.style.setProperty('--y', y + 'px');
+
+            const duration = 20 + Math.random() * 25;
+            el.style.animationDuration = duration + 's';
+
+            if (Math.random() < 0.1) return;
+            document.body.appendChild(el);
+
+            setTimeout(() => el.remove(), (duration + 5) * 1000);
+        }
+
+        setInterval(createSpaceEmoji, 1200);
+        for(let i=0;i<8;i++)createSpaceEmoji();
+
+
+
+        /* 2. метеоры */
+        function createMeteor(){
+            const m=document.createElement('div');m.className='meteor';
+            m.style.left=Math.random()*100+'%';
+            m.style.animationDuration=(Math.random()*3+2)+'s';
+            m.style.animationDelay=Math.random()*5+'s';
+            document.querySelector('.cosmic-bg').appendChild(m);
+            setTimeout(()=>m.remove(),(Math.random()*3+2)*1000+5000);
+        }
+        for(let i=0;i<20;i++)createMeteor();
+
+        /* 3. мышиные звёздочки */
+        document.addEventListener('mousemove',e=>{
+            const st=document.createElement('div');
+            st.style.cssText='position:fixed;width:8px;height:8px;background:radial-gradient(circle,white,transparent);border-radius:50%;left:'+e.clientX+'px;top:'+e.clientY+'px;pointer-events:none;z-index:150;';
+            document.body.appendChild(st);
+            st.animate([{opacity:1,transform:'scale(1)'},{opacity:0,transform:'scale(3)'}],{duration:800,easing:'ease-out'}).onfinish=()=>st.remove();
+        });
+
+        /* 4. луна + астронавт */
+        const moon=document.getElementById('moon'),ast=document.getElementById('astronaut');
+        let followMouse;
+        ast.addEventListener('click',()=>{
+            if(ast.classList.contains('flying'))return;
+            ast.classList.remove('sleeping');ast.classList.add('flying');
+            followMouse=e=>{ast.style.left=(e.clientX-30)+'px';ast.style.top=(e.clientY-30)+'px';ast.style.bottom='auto';};
+            document.addEventListener('mousemove',followMouse);
+        });
+        moon.addEventListener('click',()=>{
+            if(!ast.classList.contains('flying'))return;
+            document.removeEventListener('mousemove',followMouse);
+            ast.classList.remove('flying');ast.classList.add('sleeping');
+            ast.style.top='auto';ast.style.left='90%';ast.style.bottom='70px';ast.style.transform='translateX(-50%)';
+        });
+
+        /* ---------- данные вселенных ---------- */
+        const universes=[
+            {name:'ChatGPT',video:'Chat.mov',color:'#00ffff',description:'В этом видео ты узнаешь, как правильно и эффективно использовать ChatGPT — мощный ИИ-инструмент, который помогает писать тексты, создавать сайты, генерировать идеи, учиться, программировать и экономить время.'},
+            {name:'Grok',video:'Grok.MOV',color:'#32cd52',description:'В этом видео я покажу, как правильно работать с Grok — ИИ от xAI. Разберём лучшие команды, практические примеры, где он реально помогает, и объясню, как получать умные, точные и быстрые ответы.'},
+            {name:'Google Labs',video:'glab.MOV',color:'#ff1493',description:'Google Labs — это место, где появляются экспериментальные ИИ-функции Google. Здесь ты можешь тестировать будущее: новый ИИ-поиск, умные подсказки, генерацию ответов'},
+            {name:'Qwen Chat',video:'qwen.MOV',color:'#ffd700',description:'Qwen Chat — это умный ИИ-ассистент от Alibaba, который понимает сложные вопросы, пишет тексты, помогает в обучении, программировании и создании идей.'},
+            {name:'WIX',video:'wix.MOV',color:'#4169e1',description:'Wix — это простой и мощный конструктор сайтов, где ты можешь создать свой сайт без знаний программирования. В этом видео я покажу, как выбрать шаблон, настроить дизайн, добавить нужные элементы и запустить сайт всего за несколько минут.'},
+            {name:'Vibe Coding',video:'vb.mp4',color:'#8a2be2',description:'это подход к программированию, при котором разработка ведется с помощью искусственного интеллекта, а человек описывает задачу на естественном языке, а не пишет код сам.'},
+            {name:'ChatGPT+🧠',video:'Math.MOV',color:'#e91e63',description:'В этом видео ты увидишь, как ChatGPT и обычные идеи могут превратиться в настоящий сайт-тренажёр по математике.'},
+            {name:'Kimi',video:'kimi.MOV',color:'#9c27b0',description:'В этом видео ты узнаешь, как Kimi превращает твои идеи в готовые сайты. Мы покажем, как с его помощью придумывать структуру, дизайн, текст, функционал и даже генерировать полноценный код.'},
+            {name:'Expo DEV',video:'expo.mp4',color:'#ff9800',description:'Expo — это полный стек для разработки мобильных приложений на React Native с мощными облачными сервисами. Создавайте, разрабатывайте и публикуйте быстрее.'},
+            {name:'Eternal Library',video:'kimi.mp4',color:'#4caf50',description:'Infinite repository of knowledge where books float and pages turn themselves.'}
+        ];
+
+        /* ---------- UI ---------- */
+        let current=0,visited=new Set([0]),transitioning=false;
+        const viewer=document.getElementById('universeViewer'),selector=document.getElementById('universeSelector'),progress=document.getElementById('progressFill');
+
+        universes.forEach((u,i)=>{
+            const scene=document.createElement('div');scene.className='universe-scene';scene.id=`universe-${i}`;
+            const wrap=document.createElement('div');wrap.className='video-container';
+            const v=document.createElement('video');v.src=u.video;v.controls=v.playsInline=true;v.preload='metadata';
+            v.addEventListener('play',()=>v.classList.add('playing'));v.addEventListener('pause',()=>v.classList.remove('playing'));
+            const info=document.createElement('div');info.className='universe-info';info.innerHTML=`<h3 class="text-lg font-bold mb-2" style="color:${u.color}">${u.name}</h3><p class="text-sm text-gray-300">${u.description}</p>`;
+            wrap.append(v,info);scene.appendChild(wrap);viewer.appendChild(scene);
+
+            const btn=document.createElement('button');btn.className='universe-btn';btn.innerHTML=['🏙️','🌲','👾','🏛️','🌊','🌌','💎','🏝️','💻','📚'][i];btn.title=u.name;
+            btn.addEventListener('click',()=>transitionTo(i));selector.appendChild(btn);
+        });
+
+        function show(idx){document.querySelectorAll('.universe-scene').forEach(s=>s.classList.remove('active'));
+            document.getElementById(`universe-${idx}`).classList.add('active');current=idx;
+            document.querySelectorAll('.universe-btn').forEach((b,i)=>{b.classList.toggle('active',i===idx);b.classList.toggle('visited',visited.has(i));});
+            updateProgress();
+        }
+        function transitionTo(idx){if(transitioning||idx===current)return;transitioning=true;
+            const p=document.createElement('div');p.style.cssText='position:fixed;inset:0;margin:auto;width:300px;height:300px;border-radius:50%;background:conic-gradient(#ff1493,#0ff,#32cd52,#ffd700,#ff1493);animation:spin 1s linear infinite;z-index:9999;opacity:0';
+            document.body.appendChild(p);
+            p.animate([{opacity:0,scale:0},{opacity:1,scale:1.5}],{duration:500,fill:'forwards'}).onfinish=()=>{
+                visited.add(idx);show(idx);transitioning=false;
+                p.animate([{opacity:1,scale:1.5},{opacity:0,scale:2}],{duration:500,fill:'forwards'}).onfinish=()=>p.remove();
+            };
+        }
+        function updateProgress(){progress.style.width=(visited.size/universes.length*100)+'%';}
+        document.addEventListener('keydown',e=>{if(e.key>='1'&&e.key<='9')transitionTo(+e.key-1);if(e.key==='0')transitionTo(9);});
+        document.getElementById('aiSphere').addEventListener('click',()=>location.href='launch.html');
+
+        /* ---------- модалка ---------- */
+        const overlay=document.getElementById('taskModalOverlay'),form=document.getElementById('modalEmailForm'),fileArea=document.getElementById('modalFileArea'),fileInput=document.getElementById('modalFileInput'),fileList=document.getElementById('modalFileList');
+        let modalFiles=[];
+        document.getElementById('taskButton').addEventListener('click',()=>{overlay.classList.add('active');document.body.style.overflow='hidden';});
+        document.getElementById('closeModal').addEventListener('click',closeModal);
+        overlay.addEventListener('click',e=>{if(e.target===overlay)closeModal();});
+        document.addEventListener('keydown',e=>{if(e.key==='Escape'&&overlay.classList.contains('active'))closeModal();});
+        fileArea.addEventListener('click',()=>fileInput.click());
+        fileArea.addEventListener('dragover',e=>{e.preventDefault();fileArea.classList.add('dragover');});
+        fileArea.addEventListener('dragleave',()=>fileArea.classList.remove('dragover'));
+        fileArea.addEventListener('drop',e=>{e.preventDefault();fileArea.classList.remove('dragover');handleFiles(e.dataTransfer.files);});
+        fileInput.addEventListener('change',e=>handleFiles(e.target.files));
+        form.addEventListener('submit',sendTask);
+
+        function closeModal(){overlay.classList.remove('active');document.body.style.overflow='';form.reset();modalFiles=[];updateFileList();}
+        function handleFiles(newFiles){for(const f of newFiles){if(f.size>10*1024*1024){alert(`${f.name} > 10 МБ`);continue;}modalFiles.push(f);}updateFileList();}
+        function updateFileList(){fileList.innerHTML='';modalFiles.forEach((f,i)=>{const item=document.createElement('div');item.className='modal-file-item';item.innerHTML=`<span>${f.name} (${(f.size/1024/1024).toFixed(2)} МБ)</span><span class="cursor-pointer text-red-400 font-bold" data-i="${i}">×</span>`;fileList.appendChild(item);item.querySelector('span:last-child').addEventListener('click',e=>{modalFiles.splice(e.target.dataset.i,1);updateFileList();});});}
+        async function sendTask(e) {
+            e.preventDefault();
+
+            const btn = form.querySelector('button');
+            btn.disabled = true;
+            btn.textContent = 'Отправка...';
+
+            try {
+                const fd = new FormData(form);
+
+                await emailjs.send(
+                    emailjsConfig.serviceID,
+                    emailjsConfig.templateID,
+                    {
+                        from_name: fd.get('fromName'),
+                        from_email: fd.get('fromEmail'),
+                        message: fd.get('message'),
+                        to_email: 'aischool.pvl@gmail.com',
+                        subject: `Космическое задание от ${fd.get('fromName')}`
+                    }
+                );
+
+                btn.textContent = '✅ Отправлено!';
+                setTimeout(closeModal, 1500);
+
+            } catch (err) {
+                console.error(err);
+                btn.textContent = '❌ Ошибка';
+                btn.disabled = false;
+            }
+        }
+
+    
+    function startFade() {
+        if (window.fadeTimer) clearTimeout(window.fadeTimer);
+
+        const info = document.querySelector('.universe-scene.active .universe-info');
+        if (!info) return;
+
+        // Всегда показываем сначала
+        info.classList.remove('fade-out');
+
+        // Через 5 секунд — исчезает
+        window.fadeTimer = setTimeout(() => {
+            info.classList.add('fade-out');
+        }, 5000);
+
+        // При наведении — показать
+        info.onmouseenter = () => {
+            info.classList.remove('fade-out');
+            if (window.fadeTimer) clearTimeout(window.fadeTimer);
+        };
+
+        // Когда мышь ушла — через 5 сек снова исчезает
+        info.onmouseleave = () => {
+            if (window.fadeTimer) clearTimeout(window.fadeTimer);
+            window.fadeTimer = setTimeout(() => {
+                info.classList.add('fade-out');
+            }, 5000);
+        };
+    }
+
+        /* ---------- init ---------- */
+        show(0);
+        updateProgress();
+    </script>
+</body>
+</html>

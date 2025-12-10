@@ -1,0 +1,176 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<title>Chibi Superpower Battle</title>
+<style>
+body { margin:0; font-family:Arial,sans-serif; background:#111625; color:white; overflow:hidden; display:flex; justify-content:center; align-items:center; height:100vh; flex-direction:column;}
+#arena { width:900px; height:400px; display:flex; justify-content:space-between; align-items:center; position:relative; margin-top:20px;}
+.sidePanel { width:260px; padding:10px; background:rgba(20,20,30,0.6); border-radius:15px; text-align:center;}
+.taskBox { font-size:22px; margin-bottom:10px; word-break:break-word;}
+.timer { font-size:20px; margin-bottom:10px; color:#ffdf66;}
+input { width:80%; padding:8px; font-size:20px; border-radius:8px; border:none; text-align:center;}
+button { font-size:18px; padding:6px 12px; margin-top:5px; border-radius:8px; border:none; cursor:pointer; background-color:#3be85a; color:#111625;}
+.hpBar { width:90%; height:20px; background:#333; border-radius:10px; margin:10px auto; overflow:hidden;}
+.hpFill { height:100%; width:100%; background:linear-gradient(90deg,#3be85a,#2aad45); transition:width 0.4s;}
+.fighterWrapper { width:200px; height:220px; display:flex; justify-content:center; align-items:center; position:relative; font-size:80px; transition: transform 0.25s; color:white;}
+.blast { position:absolute; font-size:40px; animation:blastAnim 0.5s linear forwards; pointer-events:none;}
+@keyframes blastAnim {0% {opacity:1; transform:scale(0.5);}50%{opacity:1; transform:scale(1);}100%{opacity:0; transform:scale(1.5);}}
+#gameOver {position:absolute; top:50%; left:50%; transform:translate(-50%,-50%); font-size:36px; color:#ff5555; background:rgba(0,0,0,0.7); padding:20px; border-radius:15px; display:none;}
+#startBtn,#restartBtn {font-size:22px; padding:10px 20px; border:none; border-radius:10px; cursor:pointer; background-color:#3be85a; color:#111625; margin-top:10px;}
+#restartBtn {display:none;}
+</style>
+</head>
+<body>
+
+<button id="startBtn">🙆🏽</button>
+<button id="restartBtn">Играть снова</button>
+
+<div id="arena" style="display:none">
+    <div class="sidePanel">
+        <div class="hpBar"><div id="hp1" class="hpFill"></div></div>
+        <div class="taskBox" id="task1">...</div>
+        <div class="timer" id="timer1">7</div>
+        <input type="text" id="input1" placeholder="Ответ">
+        <br>
+        <button onclick="submitAnswer(1)">Ответить</button>
+    </div>
+
+    <div class="fighterWrapper" id="wrap1">🧚🏼‍♀️</div>
+    <div class="fighterWrapper" id="wrap2">🧜🏼‍♀️</div>
+
+    <div class="sidePanel">
+        <div class="hpBar"><div id="hp2" class="hpFill"></div></div>
+        <div class="taskBox" id="task2">...</div>
+        <div class="timer" id="timer2">7</div>
+        <input type="text" id="input2" placeholder="Ответ">
+        <br>
+        <button onclick="submitAnswer(2)">Ответить</button>
+    </div>
+</div>
+
+<div id="gameOver"></div>
+
+<script>
+const fighter1=document.getElementById("wrap1");
+const fighter2=document.getElementById("wrap2");
+const task1=document.getElementById("task1");
+const task2=document.getElementById("task2");
+const input1=document.getElementById("input1");
+const input2=document.getElementById("input2");
+const timerElem1=document.getElementById("timer1");
+const timerElem2=document.getElementById("timer2");
+const hpElem1=document.getElementById("hp1");
+const hpElem2=document.getElementById("hp2");
+const gameOverElem=document.getElementById("gameOver");
+const arena=document.getElementById("arena");
+const startBtn=document.getElementById("startBtn");
+const restartBtn=document.getElementById("restartBtn");
+
+let hp1=100, hp2=100;
+let timer1=7, timer2=7;
+let answer1=null, answer2=null;
+let gameActive=false;
+
+/* ------------------ Генератор случайных заданий ------------------ */
+function randomTask(){
+    const operations=['+','-','*'];
+    const numElements=Math.floor(Math.random()*2)+2; // 2 или 3 элемента
+    let numbers=[];
+    let ops=[];
+    for(let i=0;i<numElements;i++){ numbers.push(Math.floor(Math.random()*20)+1); }
+    for(let i=0;i<numElements-1;i++){ ops.push(operations[Math.floor(Math.random()*operations.length)]); }
+    let expr='';
+    if(numElements===2){
+        expr=`${numbers[0]} ${ops[0]} ${numbers[1]}`;
+        if(Math.random()<0.5) expr=`(${numbers[0]} ${ops[0]} ${numbers[1]})`;
+    } else {
+        expr=`${numbers[0]} ${ops[0]} ${numbers[1]} ${ops[1]} ${numbers[2]}`;
+        if(Math.random()<0.5) expr=`(${numbers[0]} ${ops[0]} ${numbers[1]}) ${ops[1]} ${numbers[2]}`;
+        else if(Math.random()<0.5) expr=`${numbers[0]} ${ops[0]} (${numbers[1]} ${ops[1]} ${numbers[2]})`;
+    }
+    let ans=eval(expr);
+    return {text:expr, ans:ans};
+}
+
+function newTasks(){
+    if(!gameActive) return;
+    let t1=randomTask();
+    let t2=randomTask();
+    task1.textContent=t1.text;
+    task2.textContent=t2.text;
+    answer1=t1.ans;
+    answer2=t2.ans;
+    timer1=7; timer2=7;
+    timerElem1.textContent=timer1;
+    timerElem2.textContent=timer2;
+}
+
+/* ------------------ Игровая логика ------------------ */
+function tick(){
+    if(!gameActive) return;
+    timer1--; timer2--;
+    timerElem1.textContent=timer1;
+    timerElem2.textContent=timer2;
+    if(timer1<=0){ timer1=7; newTasks(); }
+    if(timer2<=0){ timer2=7; newTasks(); }
+}
+setInterval(tick,1000);
+
+function submitAnswer(player){ if(player===1) answer(1); else answer(2); }
+
+function answer(player){
+    if(!gameActive) return;
+    if(player===1 && Number(input1.value)==answer1){ attack(1); input1.value=""; newTasks(); }
+    else if(player===2 && Number(input2.value)==answer2){ attack(2); input2.value=""; newTasks(); }
+}
+
+function attack(who){
+    if(!gameActive) return;
+    if(who===1){ hp2-=10; hp2=Math.max(0,hp2); hpElem2.style.width=hp2+"%"; showHit(fighter2); }
+    else { hp1-=10; hp1=Math.max(0,hp1); hpElem1.style.width=hp1+"%"; showHit(fighter1); }
+    showBlast(who);
+    checkGameOver();
+}
+
+function showBlast(player){
+    let target=player===1? fighter2 : fighter1;
+    let blast=document.createElement("div");
+    blast.className="blast"; blast.textContent="💥";
+    target.appendChild(blast);
+    setTimeout(()=>blast.remove(),500);
+}
+
+function showHit(fighter){
+    const original=fighter.textContent;
+    fighter.textContent="💀"; fighter.style.color="#ff5555";
+    setTimeout(()=>{fighter.textContent=original; fighter.style.color="#ffffff";},300);
+}
+
+function checkGameOver(){
+    if(hp1<=0 || hp2<=0){
+        gameActive=false;
+        gameOverElem.style.display="block";
+        restartBtn.style.display="inline-block";
+        if(hp1<=0 && hp2<=0) gameOverElem.textContent="Ничья!";
+        else if(hp1<=0) gameOverElem.textContent="🧜🏼‍♀️ Игрок 2 победил!";
+        else gameOverElem.textContent="🧚🏼‍♀️ Игрок 1 победил!";
+    }
+}
+
+/* ------------------ Старт игры ------------------ */
+startBtn.onclick=function(){ startGame(); }
+restartBtn.onclick=function(){ startGame(); }
+
+function startGame(){
+    startBtn.style.display="none";
+    restartBtn.style.display="none";
+    arena.style.display="flex";
+    gameActive=true;
+    hp1=100; hp2=100; hpElem1.style.width="100%"; hpElem2.style.width="100%";
+    gameOverElem.style.display="none";
+    newTasks();
+}
+</script>
+</body>
+</html>

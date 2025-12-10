@@ -1,0 +1,176 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AiSchool – Обучение ИИ и Вайб-кодингу</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/animejs/3.2.1/anime.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.4.0/p5.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pixi.js/7.2.4/pixi.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/typed.js/2.0.12/typed.min.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Exo+2:wght@300;400;600&display=swap" rel="stylesheet">
+    <style>
+        body {
+            background: linear-gradient(135deg, #000033 0%, #000000 50%, #1a0033 100%);
+            overflow-x: hidden;
+            font-family: 'Exo 2', sans-serif;
+            color: #fff;
+        }
+        
+        .cosmic-bg {
+            background: radial-gradient(ellipse at center, #0a0a2a 0%, #000000 70%);
+            position: fixed;
+            inset: 0;
+            z-index: -2;
+        }
+        
+        .stars {
+            position: fixed;
+            inset: 0;
+            z-index: -1;
+            background-image:
+                radial-gradient(2px 2px at 20px 30px, #eee, transparent),
+                radial-gradient(2px 2px at 40px 70px, rgba(255,255,255,.8), transparent),
+                radial-gradient(1px 1px at 90px 40px, #fff, transparent),
+                radial-gradient(1px 1px at 130px 80px, rgba(255,255,255,.6), transparent),
+                radial-gradient(2px 2px at 160px 30px, #ddd, transparent);
+            background-repeat: repeat;
+            background-size: 200px 100px;
+            animation: sparkle 20s linear infinite;
+        }
+        @keyframes sparkle{0%,100%{opacity:1}50%{opacity:.3}}
+        
+        .holographic-sphere {
+            width: 200px;
+            height: 200px;
+            border-radius: 50%;
+            background: radial-gradient(circle at 30% 30%, rgba(0, 255, 255, 0.8), rgba(0, 212, 255, 0.6), rgba(138, 43, 226, 0.4));
+            box-shadow: 0 0 50px rgba(0, 255, 255, 0.8), inset -20px -20px 40px rgba(0, 100, 200, 0.3);
+            position: relative;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            animation: float 6s ease-in-out infinite;
+        }
+        .holographic-sphere:hover{transform:scale(1.1);box-shadow:0 0 80px rgba(0,255,255,1),0 0 120px rgba(138,43,226,.8),inset -20px -20px 40px rgba(0,100,200,.5)}
+        @keyframes float{0%,100%{transform:translateY(0)}50%{transform:translateY(-20px)}}
+        
+        .symbols{position:absolute;width:100%;height:100%;border-radius:50%;border:2px solid rgba(0,255,255,.6);animation:rotate 10s linear infinite}
+        @keyframes rotate{0%{transform:rotate(0deg)}100%{transform:rotate(360deg)}}
+        
+        .energy-stream{position:absolute;width:2px;height:100px;background:linear-gradient(to bottom,transparent,#00ffff,transparent);animation:stream 3s linear infinite}
+        @keyframes stream{0%{opacity:0;transform:translateY(-100px)}50%{opacity:1}100%{opacity:0;transform:translateY(100px)}}
+        
+        .glow-text{text-shadow:0 0 10px rgba(0,255,255,.8)}
+        
+        .portal{width:150px;height:150px;border-radius:50%;background:conic-gradient(from 0deg,#ff1493,#00ffff,#32cd32,#ffd700,#ff1493);animation:portal-spin 4s linear infinite;position:relative;overflow:hidden}
+        .portal::before{content:'';position:absolute;inset:10px;border-radius:50%;background:radial-gradient(circle,transparent 30%,rgba(0,0,0,.8))}
+        @keyframes portal-spin{0%{transform:rotate(0deg)}100%{transform:rotate(360deg)}}
+    </style>
+</head>
+<body>
+    <div class="cosmic-bg"></div>
+    <div class="stars"></div>
+
+    <!-- HERO -->
+    <section class="min-h-screen flex items-center justify-center relative">
+        <div class="energy-stream" style="top:20%;left:30%;animation-delay:0s"></div>
+        <div class="energy-stream" style="top:60%;right:25%;animation-delay:1s"></div>
+        <div class="energy-stream" style="bottom:30%;left:40%;animation-delay:2s"></div>
+
+        <div class="absolute inset-0 flex items-center justify-center">
+            <div class="holographic-sphere" id="aiSphere">
+                <div class="symbols"></div>
+            </div>
+        </div>
+
+        <div class="text-center z-10 max-w-4xl mx-auto px-6">
+            <h1 class="text-6xl md:text-8xl font-black text-white mb-6 glow-text" style="font-family:'Orbitron',monospace">
+                <span id="typed-title"></span>
+            </h1>
+            <p class="text-xl md:text-2xl text-gray-300 mb-8 leading-relaxed">
+                Освой ИИ-программы и вайб-кодинг, чтобы создавать цифровые миры,
+                которые работают на твоём дыхании.
+            </p>
+            <a id="startJourney" href="launch.html" target="_blank"
+               class="bg-gradient-to-r from-cyan-400 to-purple-600 text-white px-8 py-4 rounded-full text-lg font-semibold hover:from-cyan-300 hover:to-purple-500 transform hover:scale-105 transition-all duration-300 shadow-lg hover:shadow-cyan-400/50">
+                Начать обучение
+            </a>
+        </div>
+
+        <div id="particles-container" class="absolute inset-0 pointer-events-none"></div>
+    </section>
+
+    <!-- ЧТО ВНУТРИ -->
+    <section class="py-20 relative">
+        <div class="max-w-6xl mx-auto px-6">
+            <h2 class="text-4xl md:text-5xl font-bold text-center text-white mb-16 glow-text" style="font-family:'Orbitron',monospace">
+                Что ты освоишь
+            </h2>
+
+            <div class="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
+                <div class="bg-white/10 backdrop-blur-sm border border-white/20 rounded-xl p-6 text-center hover:bg-white/20 hover:-translate-y-2 hover:shadow-cyan-400/30 transition-all">
+                    <div class="portal mx-auto mb-4"></div>
+                    <h3 class="text-xl font-bold text-cyan-400 mb-2">Kimi</h3>
+                    <p class="text-gray-300 text-sm">Безграничные возможности кодинга</p>
+                </div>
+
+                <div class="bg-white/10 backdrop-blur-sm border border-white/20 rounded-xl p-6 text-center hover:bg-white/20 hover:-translate-y-2 hover:shadow-cyan-400/30 transition-all">
+                    <div class="portal mx-auto mb-4"></div>
+                    <h3 class="text-xl font-bold text-green-400 mb-2">ChatGPT</h3>
+                    <p class="text-gray-300 text-sm">Пишем код, тексты, скрипты и презентации без блока</p>
+                </div>
+
+                <div class="bg-white/10 backdrop-blur-sm border border-white/20 rounded-xl p-6 text-center hover:bg-white/20 hover:-translate-y-2 hover:shadow-cyan-400/30 transition-all">
+                    <div class="portal mx-auto mb-4"></div>
+                    <h3 class="text-xl font-bold text-pink-400 mb-2">Вайб-кодинг</h3>
+                    <p class="text-gray-300 text-sm">Сайты и приложения, которые чувствуют настроение</p>
+                </div>
+
+                <div class="bg-white/10 backdrop-blur-sm border border-white/20 rounded-xl p-6 text-center hover:bg-white/20 hover:-translate-y-2 hover:shadow-cyan-400/30 transition-all">
+                    <div class="portal mx-auto mb-4"></div>
+                    <h3 class="text-xl font-bold text-yellow-400 mb-2">Qwen & Google LAB</h3>
+                    <p class="text-gray-300 text-sm">Генерируем видео из текста и делаем viral-контент</p>
+                </div>
+
+                <div class="bg-white/10 backdrop-blur-sm border border-white/20 rounded-xl p-6 text-center hover:bg-white/20 hover:-translate-y-2 hover:shadow-cyan-400/30 transition-all">
+                    <div class="portal mx-auto mb-4"></div>
+                    <h3 class="text-xl font-bold text-blue-400 mb-2">ElevenLabs & Voice AI</h3>
+                    <p class="text-gray-300 text-sm">Клонирование голоса и озвучка без студии</p>
+                </div>
+
+                <div class="bg-white/10 backdrop-blur-sm border border-white/20 rounded-xl p-6 text-center hover:bg-white/20 hover:-translate-y-2 hover:shadow-cyan-400/30 transition-all">
+                    <div class="portal mx-auto mb-4"></div>
+                    <h3 class="text-xl font-bold text-purple-400 mb-2">Notion AI & AutoGPT</h3>
+                    <p class="text-gray-300 text-sm">Автоматизируем учёбу, работу и личные проекты</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- ИСТОРИЯ -->
+    <section class="py-20 relative">
+        <div class="max-w-4xl mx-auto px-6 text-center">
+            <h2 class="text-3xl md:text-4xl font-bold text-white mb-8 glow-text" style="font-family:'Orbitron',monospace">
+                Освой искусство создания эффективных запросов и будь в темпе будущего.
+            </h2>
+            <p class="text-lg text-gray-300 mb-8 leading-relaxed">
+            Используя ИИ, ты способен за короткое время освоить множество сфер: создавать дизайн, писать код, придумывать контент и находить решения быстрее, чем когда-либо.
+            </p>
+            <div class="bg-gradient-to-r from-purple-600/20 to-cyan-600/20 rounded-xl p-8 backdrop-filter backdrop-blur-sm border border-white/10">
+                <p class="text-cyan-400 text-lg italic">
+                    "Если ты можешь представить — ты уже наполовину создал."
+                </p>
+                <p class="text-gray-400 mt-4">- AiSchool</p>
+            </div>
+        </div>
+    </section>
+
+    <!-- FOOTER -->
+    <footer class="py-12 text-center text-gray-400">
+        <p>&copy; 2024 AiSchool – строй свои вселенные с ИИ.</p>
+    </footer>
+
+    <script src="main.js"></script>
+</body>
+</html>
