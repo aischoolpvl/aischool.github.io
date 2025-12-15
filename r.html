@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="ru">
 <head>
@@ -105,17 +106,14 @@
             align-items: center;
             z-index: 2;
         }
-        /* YouTube iframe стили */
-        .youtube-iframe{
+        .video-container video{
             width:260px;
             max-width:90vw;
             border-radius:12px;
             transition:.4s;
             cursor:pointer;
         }
-        .youtube-iframe:hover{
-            transform:scale(1.05);
-        }
+        .video-container video.playing{width:min(700px,90vw);transform:scale(1.05)}
         .universe-info{
             position:absolute;;
             top:20px;
@@ -423,18 +421,18 @@
             ast.style.top='auto';ast.style.left='90%';ast.style.bottom='70px';ast.style.transform='translateX(-50%)';
         });
 
-        /* ---------- данные вселенных (с YouTube) ---------- */
+        /* ---------- данные вселенных ---------- */
         const universes=[
-            {name:'ChatGPT',video:'https://www.youtube.com/embed/B1J-bsRvvO0',color:'#00ffff',description:'Мощный ИИ-ассистент для текста, кода и идей.',docs:'https://openai.com/chatgpt ',task:'📌 Задание: Сгенерируйте изображение. Измените запрос так, чтобы стиль стал: футуристическим, школьным, техно-минимализм'},
-            {name:'Grok',video:'https://www.youtube.com/embed/yBYARS_gZBU',color:'#32cd52',description:'ИИ от xAI с юмором и прямотой.',docs:'https://grok.com/ ',task:'📌 Задание: Сгенерируйте короткое видео или сценарий видео на тему «Мир через 20 лет».'},
-            {name:'Google Labs',video:'https://www.youtube.com/embed/D7IZ_UPa-Tk',color:'#ff1493',description:'Экспериментальные ИИ-функции Google.',docs:'https://labs.google.com ',task:'📌 Задание: Задание: Создайте видео предмета повседневного использования.'},
-            {name:'Qwen Chat',video:'https://www.youtube.com/embed/5s0mBrPamBM',color:'#ffd700',description:'Ассистент от Alibaba на русском и китайском.',docs:'https://chat.qwen.ai/ ',task:'📌 Задание: Придумай сценарий короткого видео на любую тему.'},
-            {name:'WIX',video:'https://www.youtube.com/embed/px1fgCWT2UE',color:'#4169e1',description:'Конструктор сайтов с ИИ-дизайном.',docs:'https://wix.com ',task:'📌 Задание: Сгенерируйте сайт с ИИ-чатом или используя готовый шаблон.'},
-            {name:'Vibe Coding',video:'https://www.youtube.com/embed/kpH2cqCyX90',color:'#8a2be2',description:'Программируем словами: описал → получил код.',docs:'https://invideo.io/?utm_source=google&utm_medium=cpc&utm_campaign=Global_Search_Brand_Exact_EN&adset_name=Invideo_AI&keyword=invideo%20.ai&network=g&device=c&utm_term=invideo%20.ai&utm_content=Invideo_AI&matchtype=e&placement=g&campaign_id=18035330774&adset_id=152533182894&ad_id=674819400174&gad_source=1&gad_campaignid=18035330774&gbraid=0AAAAACqfi_DZpKxt-sjZmW8LP1mlwtyIC&gclid=Cj0KCQiAuvTJBhCwARIsAL6Demg7WSO8TkFfAFWi69XBenGwoThL3P1z4U4dhtkEH5mu-pqzBxecfnkaAthkEALw_wcB ',task:'📌 Задание: Сгенерируйте видео по сслыке выше'},
-            {name:'ChatGPT+🧠',video:'https://www.youtube.com/embed/jNELzLK93cQ',color:'#e91e63',description:'Создаём математический тренажёр за 5 минут.',docs:'math.html',task:'📌 Задание: Сгенерируй простой калькулятор.'},
-            {name:'Kimi',video:'https://www.youtube.com/embed/BIFi0dQC0vs',color:'#9c27b0',description:'Генерация сайтов из описания.',docs:'https://www.kimi.com/ ',task:'📌 Задание: Сгенерируйте полноценный сайт'},
-            {name:'Expo DEV',video:'https://www.youtube.com/embed/fPfbG6bGtcU',color:'#ff9800',description:'Мобильные приложения на React Native.',docs:'https://expo.dev ',task:'📌 Задание: Создайте мобильное приложение: Кулинарный помощник. Приложение с рецептами и планированием питания.'},
-            {name:'Eternal Library',video:'https://www.youtube.com/embed/O4PD5rJfMLw',color:'#4caf50',description:'Бесконечная библиотека знаний.',docs:'#',task:'📌 Задание: Сгенерируйте изображение. Измените запрос так, чтобы стиль стал: футуристическим, школьным, техно-минимализм'}
+            {name:'ChatGPT',video:'Chat.mp4',color:'#00ffff',description:'Мощный ИИ-ассистент для текста, кода и идей.',docs:'https://openai.com/chatgpt ',task:'📌 Задание: Сгенерируйте изображение. Измените запрос так, чтобы стиль стал: футуристическим, школьным, техно-минимализм'},
+            {name:'Grok',video:'Grok.mp4',color:'#32cd52',description:'ИИ от xAI с юмором и прямотой.',docs:'https://grok.com/ ',task:'📌 Задание: Сгенерируйте короткое видео или сценарий видео на тему «Мир через 20 лет».'},
+            {name:'Google Labs',video:'glab.mp4',color:'#ff1493',description:'Экспериментальные ИИ-функции Google.',docs:'https://labs.google.com ',task:'📌 Задание: Задание: Создайте видео предмета повседневного использования.'},
+            {name:'Qwen Chat',video:'qwen.mp4',color:'#ffd700',description:'Ассистент от Alibaba на русском и китайском.',docs:'https://chat.qwen.ai/ ',task:'📌 Задание: Придумай сценарий короткого видео на любую тему.'},
+            {name:'WIX',video:'wix.mp4',color:'#4169e1',description:'Конструктор сайтов с ИИ-дизайном.',docs:'https://wix.com ',task:'📌 Задание: Сгенерируйте сайт с ИИ-чатом или используя готовый шаблон.'},
+            {name:'Vibe Coding',video:'vb.mp4',color:'#8a2be2',description:'Программируем словами: описал → получил код.',docs:'https://invideo.io/?utm_source=google&utm_medium=cpc&utm_campaign=Global_Search_Brand_Exact_EN&adset_name=Invideo_AI&keyword=invideo%20.ai&network=g&device=c&utm_term=invideo%20.ai&utm_content=Invideo_AI&matchtype=e&placement=g&campaign_id=18035330774&adset_id=152533182894&ad_id=674819400174&gad_source=1&gad_campaignid=18035330774&gbraid=0AAAAACqfi_DZpKxt-sjZmW8LP1mlwtyIC&gclid=Cj0KCQiAuvTJBhCwARIsAL6Demg7WSO8TkFfAFWi69XBenGwoThL3P1z4U4dhtkEH5mu-pqzBxecfnkaAthkEALw_wcB ',task:'📌 Задание: Сгенерируйте видео по сслыке выше'},
+            {name:'ChatGPT+🧠',video:'Math.mp4',color:'#e91e63',description:'Создаём математический тренажёр за 5 минут.',docs:'math.html',task:'📌 Задание: Сгенерируй простой калькулятор.'},
+            {name:'Kimi',video:'kimi.mp4',color:'#9c27b0',description:'Генерация сайтов из описания.',docs:'https://www.kimi.com/ ',task:'📌 Задание: Сгенерируйте полноценный сайт'},
+            {name:'Expo DEV',video:'expo.mp4',color:'#ff9800',description:'Мобильные приложения на React Native.',docs:'https://expo.dev ',task:'📌 Задание: Создайте мобильное приложение: Кулинарный помощник. Приложение с рецептами и планированием питания.'},
+            {name:'Eternal Library',video:'kimi.mp4',color:'#4caf50',description:'Бесконечная библиотека знаний.',docs:'#',task:'📌 Задание: Сгенерируйте изображение. Измените запрос так, чтобы стиль стал: футуристическим, школьным, техно-минимализм'}
         ];
 
         /* ---------- UI ---------- */
@@ -444,19 +442,10 @@
         universes.forEach((u,i)=>{
             const scene=document.createElement('div');scene.className='universe-scene';scene.id=`universe-${i}`;
             const wrap=document.createElement('div');wrap.className='video-container';
-            
-            // YouTube iframe
-            const iframe=document.createElement('iframe');
-            iframe.src=u.video+'?autoplay=1&mute=1&loop=1&playlist='+u.video.split('/').pop();
-            iframe.width='260';
-            iframe.height='150';
-            iframe.frameBorder='0';
-            iframe.allow='accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture';
-            iframe.allowFullscreen=true;
-            iframe.classList.add('youtube-iframe');
-            
+            const v=document.createElement('video');v.src=u.video;v.controls=v.playsInline=true;v.preload='metadata';
+            v.addEventListener('play',()=>v.classList.add('playing'));v.addEventListener('pause',()=>v.classList.remove('playing'));
             const info=document.createElement('div');info.className='universe-info';info.innerHTML=`<h3 class="text-lg font-bold mb-2" style="color:${u.color}">${u.name}</h3><p class="text-sm text-gray-300">${u.description}</p>`;
-            wrap.append(iframe,info);scene.appendChild(wrap);viewer.appendChild(scene);
+            wrap.append(v,info);scene.appendChild(wrap);viewer.appendChild(scene);
             const btn=document.createElement('button');btn.className='universe-btn';btn.innerHTML=['🏙️','🌲','👾','🏛️','🌊','🌌','💎','🏝️','💻','📚'][i];btn.title=u.name;
             btn.addEventListener('click',()=>transitionTo(i));selector.appendChild(btn);
         });
@@ -497,6 +486,7 @@
             if(e.key==='ArrowLeft')transitionTo((current-1+universes.length)%universes.length);
             if(e.key==='ArrowRight')transitionTo((current+1)%universes.length);
             if(e.key==='r'||e.key==='R')randomUniverse();
+            if(e.key===' '){e.preventDefault();const v=document.querySelector('.universe-scene.active video');if(v)v.paused?v.play():v.pause();}
             if(e.key==='Escape')closeModal();
             if(e.key==='h'||e.key==='H')document.getElementById('hotkeysHint').classList.toggle('show');
         });
