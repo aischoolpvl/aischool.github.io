@@ -1,0 +1,287 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI School – старт</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        body {
+            background: linear-gradient(135deg, #000033 0%, #000000 50%, #1a0033 100%);
+            overflow-x: hidden;
+            font-family: 'Exo 2', sans-serif;
+            color: #fff;
+        }
+        
+        .cosmic-bg {
+            background: radial-gradient(ellipse at center, #0a0a2a 0%, #000000 70%);
+            position: fixed;
+            inset: 0;
+            z-index: -2;
+        }
+        
+        .stars {
+            position: fixed;
+            inset: 0;
+            z-index: -1;
+            background-image:
+                radial-gradient(2px 2px at 20px 30px, #eee, transparent),
+                radial-gradient(2px 2px at 40px 70px, rgba(255,255,255,.8), transparent),
+                radial-gradient(1px 1px at 90px 40px, #fff, transparent),
+                radial-gradient(1px 1px at 130px 80px, rgba(255,255,255,.6), transparent),
+                radial-gradient(2px 2px at 160px 30px, #ddd, transparent);
+            background-repeat: repeat;
+            background-size: 200px 100px;
+            animation: sparkle 20s linear infinite;
+        }
+        @keyframes sparkle{0%,100%{opacity:1}50%{opacity:.3}}
+
+        /* ---------- свечение луны ---------- */
+        .moon-glow {
+            filter: brightness(1.2) drop-shadow(0 0 30px rgba(255, 255, 255, 0.8));
+            transition: filter 0.3s ease;
+        }
+
+        /* ---------- метеоры ---------- */
+        .meteor {
+            position: absolute;
+            width: 2px;
+            height: 2px;
+            background: white;
+            border-radius: 50%;
+            box-shadow: 0 0 6px 3px rgba(255,255,255,0.6);
+            opacity: 0;
+            transform: rotate(-45deg);
+        }
+        @keyframes meteor-fall {
+            0% {
+                opacity: 1;
+                transform: translate(0, -150px) rotate(-45deg);
+            }
+            100% {
+                opacity: 0;
+                transform: translate(300px, 800px) rotate(-45deg);
+            }
+        }
+
+        /* ---------- эмоджи-метеориты ---------- */
+        .space-emoji{
+            position: fixed;
+            font-size: 22px;
+            opacity: .3;
+            pointer-events: none;
+            z-index: 50;
+            animation: emojiFly linear forwards;
+        }
+        @keyframes emojiFly{
+            0%{ transform: translateX(-120px) translateY(var(--y)); }
+            100%{ transform: translateX(calc(100vw + 200px)) translateY(var(--y)); }
+        }
+
+        /* ---------- 3 маленькие сферы ---------- */
+        .tiny-sphere{position:fixed;width:24px;height:24px;border-radius:50%;background:radial-gradient(circle at 30% 30%,var(--color),transparent);opacity:0.35;pointer-events:none;z-index:5;transform:translate(-50%,-50%);}
+
+        /* ---------- луна ---------- */
+        .moon{position:fixed;bottom:-150px;right:-50px;width:280px;z-index:1000;opacity:.7;filter:brightness(.7) drop-shadow(0 0 10px rgba(255,255,255,.2));transition:opacity .4s,filter .4s,transform .4s}
+        .moon:hover{opacity:1;filter:brightness(1.1) drop-shadow(0 0 25px rgba(255,255,255,.5));transform:scale(1.05);cursor:pointer}
+
+        /* ---------- астронавт + плавный полёт ---------- */
+        .astronaut{position:fixed;bottom:70px;left:90%;transform:translateX(-50%);width:80px;height:60px;background:url(astronaut-sleep.png) center/contain no-repeat;cursor:pointer;z-index:1001;transition:filter .3s,transform .3s}
+        .astronaut.sleeping{animation:astronaut-sleep 4s ease-in-out infinite}
+        .astronaut.flying{animation:none;background-image:url(astronaut-fly.png);pointer-events:none}
+        @keyframes astronaut-sleep{0%,100%{transform:translateX(-50%) rotate(-5deg)}50%{transform:translateX(-50%) rotate(5deg)}}
+
+        /* ---------- ракета + кнопка ---------- */
+        .launch-screen{position:fixed;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;z-index:999}
+        .rocket-container{position:relative;margin-bottom:60px;z-index:10}
+        .rocket{font-size:150px;transform:rotate(-45deg);animation:rocket-idle 2s ease-in-out infinite}
+        @keyframes rocket-idle{0%,100%{transform:rotate(-45deg) translateY(0)}50%{transform:rotate(-45deg) translateY(-10px)}}
+        .rocket-launching{animation:rocket-launch 3s ease-out forwards}
+        @keyframes rocket-launch{0%{transform:rotate(-45deg) translateY(0) scale(1);opacity:1}100%{transform:rotate(-45deg) translateY(-1000px) scale(.1);opacity:0}}
+        .launch-button{background:linear-gradient(to right,#0ff,#8a2be2);color:#fff;border:none;padding:20px 60px;border-radius:50px;font-size:24px;font-weight:bold;cursor:pointer;box-shadow:0 0 30px rgba(0,255,255,.5);transition:.3s}
+        .launch-button:hover{transform:scale(1.05);box-shadow:0 0 50px rgba(0,255,255,.8)}
+        .launch-button:active{transform:scale(.95)}
+        .smoke-particle{position:absolute;background:radial-gradient(circle,rgba(200,200,200,.6),transparent);border-radius:50%;pointer-events:none;z-index:1}
+    </style>
+</head>
+<body>
+
+    <div class="cosmic-bg"></div>
+    <div class="stars"></div>
+
+    <!-- луна с id для свечения -->
+    <img src="moon.png" class="moon" id="moon">
+    <div class="astronaut sleeping" id="astronaut"></div>
+
+    <!-- ЦЕНТРОВЩИК -->
+    <div class="launch-screen">
+        <div class="rocket-container">
+            <div class="rocket" id="rocket">🚀</div>
+        </div>
+        <button class="launch-button" id="launchBtn">ВЗЛЕТ</button>
+    </div>
+
+<script>
+
+    /* ---------- 3 маленькие сферы ---------- */
+    const sphereColors=['#00ffff','#32cd52','#ff1493','#ffd700','#4169e1','#8a2be2'];
+    function createTinySpheres(){
+        for(let i=0;i<3;i++){
+            const sp=document.createElement('div');
+            sp.className='tiny-sphere';
+            sp.style.setProperty('--color',sphereColors[i%6]);
+            sp.style.left=Math.random()*100+'%';
+            sp.style.top=Math.random()*100+'%';
+            document.body.appendChild(sp);
+            driftSphere(sp);
+        }
+    }
+    function driftSphere(sp){
+        const duration=15+Math.random()*10;
+        const dx=(Math.random()-.5)*150;
+        const dy=(Math.random()-.5)*80;
+        sp.animate(
+            [{transform:'translate(-50%,-50%)'},
+             {transform:`translate(calc(-50% + ${dx}px),calc(-50% + ${dy}px))`}],
+            {duration:duration*1000,easing:'ease-in-out'}
+        ).onfinish=()=>driftSphere(sp);
+    }
+    createTinySpheres();
+
+    /* ---------- Метеорные точки ---------- */
+    function createMeteor() {
+        const m = document.createElement('div');
+        m.className = 'meteor';
+
+        m.style.left = Math.random() * window.innerWidth + 'px';
+        const duration = Math.random() * 2 + 2;
+
+        m.style.animation = `meteor-fall ${duration}s linear`;
+
+        document.body.appendChild(m);
+
+        setTimeout(() => m.remove(), duration * 1000);
+    }
+
+    setInterval(createMeteor, 400);
+    for (let i = 0; i < 10; i++) createMeteor();
+
+
+    /* ---------- эмоджи-метеориты ---------- */
+    const emojiPool=['🪐','🌍','🌙','☄️','🌟','✨','🌓','🛰️','🛸'];
+
+    function createSpaceEmoji(){
+        const el=document.createElement('div');
+        el.className='space-emoji';
+
+        el.textContent = emojiPool[Math.floor(Math.random() * emojiPool.length)];
+
+        const y = Math.random() * window.innerHeight;
+        el.style.setProperty('--y', y + 'px');
+
+        const duration = 20 + Math.random() * 25;
+        el.style.animationDuration = duration + 's';
+
+        if (Math.random() < 0.4) return;
+        document.body.appendChild(el);
+
+        setTimeout(() => el.remove(), (duration + 5) * 1000);
+    }
+
+    setInterval(createSpaceEmoji, 1200);
+    for(let i=0;i<8;i++)createSpaceEmoji();
+
+
+    /* ---------- звездочки от мыши ---------- */
+    document.addEventListener('mousemove',e=>{
+        const st=document.createElement('div');
+        st.style.cssText='position:fixed;width:8px;height:8px;background:radial-gradient(circle,white,transparent);border-radius:50%;left:'+e.clientX+'px;top:'+e.clientY+'px;pointer-events:none;z-index=150;';
+        document.body.appendChild(st);
+        st.animate([{opacity:1,transform:'scale(1)'},{opacity:0,transform:'scale(3)'}],{duration:800,easing:'ease-out'}).onfinish=()=>st.remove();
+    });
+
+    /* ---------- запуск ракеты ---------- */
+    document.getElementById('launchBtn').addEventListener('click',()=>{
+        const rocket=document.getElementById('rocket');
+        rocket.classList.add('rocket-launching');
+
+        const createSmoke=()=>{
+            const p=document.createElement('div');
+            p.className='smoke-particle';
+            const size=Math.random()*20+10;
+            p.style.width=p.style.height=size+'px';
+            const r=rocket.getBoundingClientRect();
+            p.style.left=(r.left+r.width/2-size/2)+'px';
+            p.style.top=(r.bottom+50)+'px';
+            document.body.appendChild(p);
+            p.animate(
+                [
+                    {transform:'translate(0,0) scale(1)',opacity:.8},
+                    {transform:`translate(${(Math.random()-.5)*100}px,${Math.random()*100+50}px) scale(3)`,opacity:0}
+                ],
+                {duration:2000,easing:'ease-out'}
+            ).onfinish=()=>p.remove();
+        };
+
+        for(let i=0;i<5;i++)setTimeout(createSmoke,i*100);
+        const int=setInterval(createSmoke,200);
+        setTimeout(()=>clearInterval(int),3000);
+
+        setTimeout(()=>location.href='r.html',3000);
+    });
+
+    /* ---------- луна + астронавт (с плавным полётом и свечением луны) ---------- */
+    const moon=document.getElementById('moon');
+    const ast=document.getElementById('astronaut');
+    let followMouseFlag = false;
+    let astX = 0, astY = 0, targetX = 0, targetY = 0;
+
+    // плавное перемещение астронавта (60 fps)
+    function animateAstronaut() {
+        if (!followMouseFlag) return;
+        astX += (targetX - astX) * 0.1;
+        astY += (targetY - astY) * 0.1;
+        ast.style.left = astX + 'px';
+        ast.style.top = astY + 'px';
+        requestAnimationFrame(animateAstronaut);
+    }
+
+    function followMouseFunc(e){
+        targetX = e.clientX - 30;
+        targetY = e.clientY - 30;
+    }
+
+    ast.addEventListener('click', () => {
+        if (ast.classList.contains('flying')) return;
+        ast.classList.remove('sleeping');
+        ast.classList.add('flying');
+        ast.style.bottom = 'auto';
+        ast.style.transform = 'translate(-50%,-50%)';
+        followMouseFlag = true;
+        // обновляем стартовые координаты
+        astX = parseFloat(ast.style.left) || (window.innerWidth * 0.9);
+        astY = parseFloat(ast.style.top) || (window.innerHeight - 70);
+        document.addEventListener('mousemove',followMouseFunc);
+        animateAstronaut();
+    });
+
+    moon.addEventListener('click', () => {
+        if (!ast.classList.contains('flying')) return;
+        followMouseFlag = false;
+        document.removeEventListener('mousemove',followMouseFunc);
+        ast.classList.remove('flying');
+        ast.classList.add('sleeping');
+        ast.style.left = '90%';
+        ast.style.top = 'auto';
+        ast.style.bottom = '70px';
+        ast.style.transform = 'translateX(-50%)';
+    });
+
+    // свечение луны
+    moon.addEventListener('mouseenter', () => moon.classList.add('moon-glow'));
+    moon.addEventListener('mouseleave', () => moon.classList.remove('moon-glow'));
+
+</script>
+
+</body>
+</html>
